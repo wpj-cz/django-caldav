@@ -1,0 +1,4 @@
+caldav
+======
+
+Python CalDAV library
