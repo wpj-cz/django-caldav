@@ -1,4 +1,4 @@
-caldav
-======
+django-caldav
+=============
 
 Python CalDAV library
