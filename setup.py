@@ -4,7 +4,7 @@ import os
 
 setup(
     name='django-caldav',
-    version='0.1',
+    version='0.3',
     description='CalDAV implementation for Django offering Feed interface',
     author='Petr Knap',
     author_email='knap@wpj.cz',
@@ -13,19 +13,20 @@ setup(
     packages=["django_caldav",],
     include_package_data=True,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
-        'License :: Commercial',
+        'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Topic :: Office/Business',
     ],
     zip_safe = False,
     install_requires = [
         'django',
         'django-ical',
-        'django-dav',
+        'djangodav>=0.0.1b5',
         'lxml',
     ],
 )
