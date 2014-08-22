@@ -53,7 +53,7 @@ class OurCalendarFeedView(CalDavFeedView):
             item.description = base_item.description
             item.save()
 
-            return HttpResponse(status=201)
+            return item
         except Exception as e:
             return HttpResponseBadRequest(content=str(e))
 

@@ -16,7 +16,7 @@ from django_caldav.acl import FullAcl
 from django_caldav.lock import DummyLock
 from django_caldav.models import CalDavEvent
 from django_caldav.resources import CalDavResource
-from django_caldav.utils import WebDAV, CalDAV, url_join, CalDAV_MAP, WebDAV_MAP, CalendarServer_MAP, CalendarServer
+from django_caldav.utils import WebDAV, CalDAV, url_join, CalDAV_MAP, WebDAV_MAP, CalendarServer_MAP, CalendarServer, iCalendar
 
 
 class CalDavFeedView(ICalFeed):
@@ -47,7 +47,7 @@ class CalDavFeedView(ICalFeed):
         return item.pk
 
     def item_save(self, request, base_item, iCalendar_component, *args, **kwargs):
-        return HttpResponseForbidden()
+        return None
 
 
 class CalDavView(DavView):
@@ -446,24 +446,34 @@ class CalDavView(DavView):
             else:
                 events = [(calendar_uri, smart_unicode(feed_response))]
 
+            multistatus = []
+            for event in events:
+                calendar = Calendar.from_ical(event[1])
+                etag = None
+                for component in calendar.walk():
+                    if component.name == "VEVENT":
+                        etag = iCalendar.unicode(component.get("UID"))
+                        break
+                multistatus.append(
+                    WebDAV(
+                        "response",
+                        WebDAV("href", event[0]),
+                        WebDAV(
+                            "propstat",
+                            WebDAV(
+                                "prop",
+                                CalDAV("calendar-data", event[1])
+                            ),
+                            WebDAV("getetag", "\"{etag}\"".format(etag=etag))
+                        ),
+                        WebDAV("status", "HTTP/1.1.200.OK")
+                    )
+                )
+
             responses.append(
                 WebDAV(
                     "multistatus",
-                    *[
-                        WebDAV(
-                            "response",
-                            WebDAV("href", event[0]),
-                            WebDAV(
-                                "propstat",
-                                WebDAV(
-                                    "prop",
-                                    CalDAV("calendar-data", event[1])
-                                ),
-                                WebDAV("getetag", "\"{etag}\"".format(etag=CalDavView.getECTag(event[1])))
-                            ),
-                            WebDAV("status", "HTTP/1.1.200.OK")
-                        ) for event in events
-                    ]
+                    *multistatus
                 )
             )
 
@@ -486,5 +496,12 @@ class CalDavView(DavView):
                 base_item.description = component.get("DESCRIPTION")
                 base_item.finalize()
 
-                return self.feed_view().item_save(request, base_item, component, *args, **kwargs)
+                item = self.feed_view().item_save(request, base_item, component, *args, **kwargs)
+                if item:
+                    response = HttpResponse()
+                    response.status_code = 201
+                    response["ETag"] = u"\"{UID}\"".format(UID=self.feed_view().item_guid(item))
+                    return response
+                else:
+                    return HttpResponseBadRequest()
         return HttpResponseBadRequest()
