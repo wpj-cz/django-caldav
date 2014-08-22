@@ -3,7 +3,7 @@ from datetime import datetime
 import hashlib
 from django.core.urlresolvers import reverse
 from django.utils.encoding import smart_unicode
-from http import Request
+from django.http import HttpRequest
 from icalendar import Calendar
 from lxml import etree
 from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpResponse, HttpResponseBadRequest
@@ -434,7 +434,9 @@ class CalDavView(DavView):
             if not calendar_query:
                 calendar_uri = calendar_uri.text
             feed = self.feed_view()
-            feed_request = Request("GET", calendar_uri)
+            feed_request = HttpRequest()
+            feed_request.method = "GET"
+            feed_request.path = calendar_uri
             feed_request.is_secure = request.is_secure
             feed_request.path = request.path
             feed_response = feed.__call__(request).content
