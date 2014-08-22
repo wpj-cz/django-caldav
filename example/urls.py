@@ -18,5 +18,4 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^calendar(?P<path>.*)$', logged_in_or_basicauth("calendar")(OurCalendarView.as_view())),
-    url(r'^calendar(?P<path>.*)/$', logged_in_or_basicauth("calendar")(OurCalendarView.as_view())),
 )
