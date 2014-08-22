@@ -46,8 +46,7 @@ class CalDavFeedView(ICalFeed):
     def item_guid(self, item):
         return item.pk
 
-    @staticmethod
-    def item_save(request, base_item, iCalendar_component):
+    def item_save(self, request, base_item, iCalendar_component, *args, **kwargs):
         return HttpResponseForbidden()
 
 
@@ -101,7 +100,7 @@ class CalDavView(DavView):
             "xml": self.get_request_body_as_etree_with_ns_map(request)
         }
         print(self.request_body["plain"])
-        return super(CalDavView, self).dispatch(request, path)
+        return super(CalDavView, self).dispatch(request, path, *args, **kwargs)
 
     def get_request_body_as_etree_with_ns_map(self, request):
         try:
@@ -440,7 +439,7 @@ class CalDavView(DavView):
             feed_request.is_secure = request.is_secure
             feed_request.path = request.path
             feed_request.user = request.user
-            feed_response = feed.__call__(feed_request).content
+            feed_response = feed.__call__(feed_request, *args, **kwargs).content
             feed_response = feed_response.replace("\r", "")
             if not calendar_query:
                 events = CalDavFeedView.one_event_per_calendar(feed_response)
@@ -487,5 +486,5 @@ class CalDavView(DavView):
                 base_item.description = component.get("DESCRIPTION")
                 base_item.finalize()
 
-                return self.feed_view.item_save(request, base_item, component)
+                return self.feed_view().item_save(request, base_item, component, *args, **kwargs)
         return HttpResponseBadRequest()

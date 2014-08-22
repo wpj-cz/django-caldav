@@ -36,8 +36,7 @@ class OurCalendarFeedView(CalDavFeedView):
     def item_link(self, item):
         return "/{pk}.ics".format(pk=item.pk)
 
-    @staticmethod
-    def item_save(base_item, iCalendar_component):
+    def item_save(self, request, base_item, iCalendar_component, *args, **kwargs):
         try:
             item = None
             if base_item.uid:
