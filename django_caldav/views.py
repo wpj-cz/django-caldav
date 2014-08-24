@@ -484,7 +484,7 @@ class CalDavView(DavView):
         return response
 
     def put(self, request, path, xbody=None, *args, **kwargs):
-        calendar = Calendar.from_ical(self.request_body["plain"])
+        calendar = Calendar.from_ical(smart_unicode(self.request_body["plain"]))
         for component in calendar.walk():
             if component.name == "VEVENT":
                 base_item = CalDavEvent()
