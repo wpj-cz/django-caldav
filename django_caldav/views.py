@@ -446,34 +446,24 @@ class CalDavView(DavView):
             else:
                 events = [(calendar_uri, smart_unicode(feed_response))]
 
-            multistatus = []
-            for event in events:
-                calendar = Calendar.from_ical(event[1])
-                etag = None
-                for component in calendar.walk():
-                    if component.name == "VEVENT":
-                        etag = iCalendar.unicode(component.get("UID"))
-                        break
-                multistatus.append(
-                    WebDAV(
-                        "response",
-                        WebDAV("href", event[0]),
-                        WebDAV(
-                            "propstat",
-                            WebDAV(
-                                "prop",
-                                CalDAV("calendar-data", event[1])
-                            ),
-                            WebDAV("getetag", "\"{etag}\"".format(etag=etag))
-                        ),
-                        WebDAV("status", "HTTP/1.1.200.OK")
-                    )
-                )
-
             responses.append(
                 WebDAV(
                     "multistatus",
-                    *multistatus
+                    *[
+                        WebDAV(
+                            "response",
+                            WebDAV("href", event[0]),
+                            WebDAV(
+                                "propstat",
+                                WebDAV(
+                                    "prop",
+                                    CalDAV("calendar-data", event[1])
+                                ),
+                                WebDAV("getetag", "\"{etag}\"".format(etag=CalDavView.getECTag(event[1])))
+                            ),
+                            WebDAV("status", "HTTP/1.1.200.OK")
+                        ) for event in events
+                    ]
                 )
             )
 
